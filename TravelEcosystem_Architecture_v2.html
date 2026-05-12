@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TravelEcosystem — Architecture Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --white: #ffffff;
+  --off-white: #f9f9f8;
+  --gray-50: #f5f4f2;
+  --gray-100: #ebebea;
+  --gray-200: #d9d9d7;
+  --gray-300: #b8b8b5;
+  --gray-400: #8a8a86;
+  --gray-500: #5c5c58;
+  --gray-600: #3a3a37;
+  --gray-700: #242422;
+  --black: #111110;
+
+  --accent: #1a1a19;
+  --accent-mid: #3a3a37;
+  --ink: #111110;
+  --tag-bg: #f0efec;
+  --tag-border: #e0dfd9;
+  --tag-text: #5c5c58;
+
+  /* Status */
+  --warn: #c2410c;
+  --warn-bg: #fff7ed;
+  --warn-border: #fed7aa;
+  --ok: #166534;
+  --ok-bg: #f0fdf4;
+  --ok-border: #bbf7d0;
+  --info: #1e40af;
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+  --new: #6b21a8;
+  --new-bg: #faf5ff;
+  --new-border: #e9d5ff;
+
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --sidebar: 268px;
+  --radius: 8px;
+  --radius-sm: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 15px; }
+
+body {
+  background: var(--off-white);
+  color: var(--black);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.65;
+}
+
+/* ─── PROGRESS ─── */
+#prog {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--black); z-index: 200;
+  transition: width 80ms linear;
+}
+
+/* ─── LAYOUT ─── */
+.shell { display: flex; min-height: 100vh; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar);
+  min-width: var(--sidebar);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  border-right: 1px solid var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.sb-top {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.sb-wordmark {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+  color: var(--black);
+  display: block;
+}
+.sb-version {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  margin-top: 3px;
+  font-family: var(--font-mono);
+}
+
+.sb-nav { padding: 16px 0 32px; flex: 1; }
+.sb-group { margin-bottom: 4px; }
+.sb-group-label {
+  font-size: 0.67rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray-400);
+  padding: 12px 24px 4px;
+}
+.sb-link {
+  display: block;
+  padding: 6px 24px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--gray-500);
+  text-decoration: none;
+  border-radius: 0;
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+}
+.sb-link:hover { color: var(--black); background: var(--gray-50); }
+.sb-link.active {
+  color: var(--black);
+  font-weight: 500;
+  background: var(--gray-50);
+}
+.sb-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 2px;
+  background: var(--black);
+  border-radius: 0 2px 2px 0;
+}
+.sb-link .badge-new {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  background: var(--new-bg);
+  color: var(--new);
+  border: 1px solid var(--new-border);
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ─── MAIN ─── */
+.main {
+  flex: 1;
+  padding: 64px 72px 120px;
+  max-width: 960px;
+  min-width: 0;
+}
+
+/* ─── SECTION SPACING ─── */
+section { margin-bottom: 80px; }
+section:first-child { margin-top: 0; }
+
+/* ─── TYPOGRAPHY ─── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  margin-bottom: 10px;
+  display: block;
+}
+
+h1 {
+  font-family: var(--font-serif);
+  font-size: 3.4rem;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--black);
+  margin-bottom: 20px;
+}
+h1 em { font-style: italic; color: var(--gray-500); }
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--black);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h2 .h2-num {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--gray-300);
+  font-weight: 400;
+}
+h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--black);
+  margin: 28px 0 10px;
+  letter-spacing: -0.01em;
+}
+
+p {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-bottom: 14px;
+  max-width: 68ch;
+  line-height: 1.7;
+}
+p strong { color: var(--black); font-weight: 500; }
+
+/* ─── HERO ─── */
+.hero {
+  padding: 56px 0 48px;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 64px;
+}
+.hero p {
+  font-size: 1rem;
+  color: var(--gray-500);
+  max-width: 58ch;
+  line-height: 1.65;
+}
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 28px; }
+.tag {
+  font-size: 0.72rem;
+  font-weight: 400;
+  padding: 4px 10px;
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-border);
+  color: var(--tag-text);
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+.tag-dark {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+/* ─── AUDIT BANNER ─── */
+.audit-banner {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.audit-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.audit-title { font-size: 0.8rem; font-weight: 600; color: var(--warn); margin-bottom: 4px; }
+.audit-body { font-size: 0.8rem; color: var(--gray-600); margin: 0; max-width: none; line-height: 1.55; }
+
+/* ─── CALLOUT ─── */
+.callout {
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border: 1px solid;
+}
+.callout-info { background: var(--info-bg); border-color: var(--info-border); }
+.callout-warn { background: var(--warn-bg); border-color: var(--warn-border); }
+.callout-ok { background: var(--ok-bg); border-color: var(--ok-border); }
+.callout-title { font-size: 0.78rem; font-weight: 600; margin-bottom: 5px; }
+.callout-info .callout-title { color: var(--info); }
+.callout-warn .callout-title { color: var(--warn); }
+.callout-ok .callout-title { color: var(--ok); }
+.callout p { font-size: 0.8rem; margin: 0; max-width: none; }
+
+/* ─── GRID / CARDS ─── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 20px 0; }
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  border-color: var(--gray-200);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.card-chip {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+  display: block;
+}
+.card-title { font-size: 0.85rem; font-weight: 600; color: var(--black); margin-bottom: 6px; }
+.card-body { font-size: 0.8rem; color: var(--gray-500); margin: 0; max-width: none; line-height: 1.6; }
+
+/* NEW badge on card */
+.card-new-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--new);
+  background: var(--new-bg);
+  border: 1px solid var(--new-border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  margin-bottom: 6px;
+}
+
+/* ─── TABLE ─── */
+.table-wrap {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--gray-400);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-100);
+  white-space: nowrap;
+}
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--gray-50);
+  color: var(--gray-600);
+  vertical-align: top;
+}
+td strong { color: var(--black); font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gray-50); }
+.td-new { color: var(--new); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; font-family: var(--font-mono); }
+
+/* ─── CODE ─── */
+.code-block {
+  background: var(--black);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: #a0a096;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+.code-block .k { color: #7dd3fc; }
+.code-block .s { color: #86efac; }
+.code-block .c { color: #52524e; }
+.code-block .v { color: #fcd34d; }
+.code-block .ns { color: #f9a8d4; }
+
+/* ─── DIAGRAM WRAPPER ─── */
+.diagram {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 20px 0;
+}
+.diagram-head {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.diagram-title { font-family: var(--font-mono); font-size: 0.68rem; color: var(--gray-400); letter-spacing: 0.05em; }
+.diagram-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-200); }
+.diagram-body { padding: 24px; overflow-x: auto; }
+
+/* ─── ROLE PILL ─── */
+.role-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.role-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px 7px 10px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 24px;
+  font-size: 0.78rem;
+  color: var(--gray-700);
+  transition: border-color 0.15s;
+}
+.role-pill:hover { border-color: var(--gray-200); }
+.role-pill-icon { font-size: 0.9rem; }
+.role-pill-title { font-weight: 500; }
+.role-pill-sub { font-size: 0.7rem; color: var(--gray-400); }
+
+/* ─── PHASE HEADER ─── */
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--black);
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+}
+.phase-num {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.phase-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--white);
+  font-style: italic;
+}
+.phase-tags { display: flex; gap: 6px; margin-left: auto; }
+.phase-tag {
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+
+/* ─── HORIZONTAL RULE ─── */
+hr.section-rule { border: none; border-top: 1px solid var(--gray-100); margin: 40px 0; }
+
+/* ─── FOCUS & SCROLL ─── */
+.focus-btn {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.15s;
+  font-family: var(--font-body);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.focus-btn:hover { border-color: var(--black); color: var(--black); }
+
+body.focus-mode .sidebar { display: none; }
+body.focus-mode .main { max-width: 820px; margin: 0 auto; padding: 64px 40px 120px; }
+
+/* ─── INLINE SVG DIAGRAM STYLES ─── */
+.arch-svg text { font-family: 'DM Sans', system-ui, sans-serif; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .sidebar { display: none; }
+  .main { padding: 40px 28px 80px; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .focus-btn { display: none; }
+  h1 { font-size: 2.4rem; }
+}
+@media (max-width: 640px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .main { padding: 32px 18px 64px; }
+  h1 { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<button class="focus-btn" onclick="document.body.classList.toggle('focus-mode');this.textContent=document.body.classList.contains('focus-mode')?'Exit Focus':'Focus Mode'">Focus Mode</button>
+
+<div class="shell">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="sb-top">
+    <span class="sb-wordmark">TravelEcosystem</span>
+    <span class="sb-version">Architecture Blueprint · v3.0</span>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-group">
+      <div class="sb-group-label">Overview</div>
+      <a href="#intro" class="sb-link active">Introduction</a>
+      <!-- <a href="#audit" class="sb-link">Audit & Gaps</a> -->
+      <a href="#phases" class="sb-link">Project Phases</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">System Design</div>
+      <a href="#architecture" class="sb-link">Layer Architecture</a>
+      <a href="#request-flow" class="sb-link">Request Flow</a>
+      <a href="#microservices" class="sb-link">Microservices</a>
+      <a href="#roles" class="sb-link">Roles & Hierarchy</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Infrastructure</div>
+      <a href="#gcp" class="sb-link">GCP Services</a>
+      <a href="#kubernetes" class="sb-link">Kubernetes / GKE</a>
+      <a href="#networking" class="sb-link">VPC Networking</a>
+      <a href="#database" class="sb-link">Database Topology</a>
+      <a href="#data-pipeline" class="sb-link">Data Pipelines</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Features</div>
+      <a href="#financial" class="sb-link">Financial Core</a>
+      <a href="#channel-manager" class="sb-link">Channel Manager</a>
+      <a href="#cross-selling" class="sb-link">Cross-Selling</a>
+      <a href="#affiliate" class="sb-link">Affiliate & QR </a>
+      <a href="#b2b" class="sb-link">B2B Marketplace </a>
+      <a href="#whitelabel" class="sb-link">White Label </a>
+      <a href="#chat" class="sb-link">In-App Chat </a>
+      <a href="#marketing" class="sb-link">Auto-Marketing </a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">AI & Phase 2</div>
+      <a href="#ai" class="sb-link">AI Modules</a>
+      <a href="#app" class="sb-link">Mobile App</a>
+      <a href="#chatbot-builder" class="sb-link">No-Code Builder </a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Assurance</div>
+      <a href="#security" class="sb-link">Security</a>
+      <a href="#resilience" class="sb-link">Resilience & DR</a>
+      <a href="#observability" class="sb-link">Observability</a>
+      <a href="#cost" class="sb-link">Cost Model</a>
+      <a href="#review" class="sb-link">Readiness Review</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+
+<!-- INTRO -->
+<section id="intro">
+  <div class="hero">
+    <span class="eyebrow">Enterprise Architecture Documentation</span>
+    <h1>TravelEcosystem<br><em>SaaS & B2B Marketplace</em></h1>
+    <p>A globally distributed, multi-tenant operational engine for travel agencies, guides, OTAs, and partners. Re-engineered from the UWT backend into a cloud-native, AI-augmented platform built for "Elite Simplicity."</p>
+    <div class="tag-row">
+      <span class="tag tag-dark">GCP / GKE</span>
+      <span class="tag">Multi-tenant</span>
+      <span class="tag">Event-driven</span>
+      <span class="tag">Vertex AI</span>
+      <span class="tag">B2B Marketplace</span>
+      <span class="tag">Real-time GPS</span>
+      <span class="tag">iCal / XML Sync</span>
+      <span class="tag">OCR Fraud Detection</span>
+      <span class="tag">White Label</span>
+    </div>
+  </div>
+
+  <p>TravelEcosystem is not a simple booking app — it is an <strong>operational engine</strong> that combines financial precision, real-time logistics, and cross-agency commerce into one zero-friction interface. The core is a re-engineering of the existing UWT backend, modernised into a marketable SaaS with an AI-augmented layer built on Phase 2.</p>
+</section>
+
+<!-- AUDIT -->
+<!-- <section id="audit">
+  <h2><span class="h2-num">00</span> Architecture Audit — Gaps vs. Specification</h2>
+
+  <div class="audit-banner">
+    <div class="audit-icon">⚠️</div>
+    <div>
+      <div class="audit-title">13 components missing from previous architecture document</div>
+      <p class="audit-body">The previous v2.4 blueprint omitted the following features explicitly defined in the project specification. They have been added in this v3.0 document and marked <span style="color:var(--new);font-weight:600;">NEW</span> throughout.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Gap</th><th>Specification Reference</th><th>Resolution in v3.0</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>White Label / Brand Customization</strong></td><td>Logos, colors per agency tenant</td><td>White Label section added; config per tenant in Identity Service</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>In-App Chat (screenshot protection)</strong></td><td>Internal comms with screenshot shield</td><td>Chat microservice added; DLP via platform-level overlay</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>iCal / XML sync (Freetour.com)</strong></td><td>Calendar sync with free-tour platforms</td><td>Channel Manager section updated; iCal/XML adapter noted</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Affiliate ID + QR Code system</strong></td><td>Unique Affiliate ID + auto QR per user</td><td>Affiliate Ecosystem section added</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>B2B Marketplace detail</strong></td><td>OCR receipts, 2-click contracts, wallet split</td><td>B2B Marketplace section fully expanded</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Influencer Discovery</strong></td><td>Modash / RapidAPI integration</td><td>Added under B2B Marketplace</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Auto-Marketing / AI Reels</strong></td><td>Social media posts from tour photos</td><td>Auto-Marketing section added under AI phase</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>No-Code Chatbot Builder</strong></td><td>Visual flow builder, language templates</td><td>No-Code Builder section added</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Multi-currency (CZK, EUR)</strong></td><td>Wallet & settlement multi-currency</td><td>Financial Core updated with FX handling</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>SEO Sync</strong></td><td>App bookings → agency website conversions</td><td>Added as Notify Service side-effect</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Auto Check-in via GPS proximity</strong></td><td>Geofence-triggered check-in</td><td>Geo/GPS service updated with geofence events</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Corporate Website</strong></td><td>Connected to SaaS, shopping cart, affiliate</td><td>Listed as separate product scope in Phases section</td><td><span class="td-new">Added</span></td></tr>
+        <tr><td><strong>Upgrade Chatbot</strong></td><td>Post-tour upsell + cross-sell prompts</td><td>Added under AI Modules</td><td><span class="td-new">Added</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section> -->
+
+<!-- PHASES -->
+<section id="phases">
+  <h2><span class="h2-num">01</span> Project Phases</h2>
+
+  <div class="phase-header">
+    <span class="phase-num">Phase 1</span>
+    <span class="phase-title">Web SaaS & Multi-tenant Backend</span>
+    <div class="phase-tags">
+      <span class="phase-tag">Web</span>
+      <span class="phase-tag">SaaS</span>
+      <span class="phase-tag">B2B</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <span class="card-chip">Product 1</span>
+      <div class="card-title">Multi-tenant SaaS Backend</div>
+      <p class="card-body">Operational management for admins and agencies. Financial core, bookings, guide payments, commissions, RBAC, and channel management.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Product 2</span>
+      <div class="card-title">Corporate Website</div>
+      <p class="card-body">Agency-facing marketing site with shopping cart, affiliate channel, Stripe/SumUp payment gateway, and direct SaaS connection.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Product 3</span>
+      <div class="card-title">B2B Marketplace</div>
+      <p class="card-body">Self-managed partner portal (restaurants, hotels), 2-click contracts, OCR receipt validation, and wallet split logic.</p>
+    </div>
+  </div>
+
+  <div class="phase-header" style="margin-top:24px;">
+    <span class="phase-num">Phase 2</span>
+    <span class="phase-title">Mobile App & AI Layer</span>
+    <div class="phase-tags">
+      <span class="phase-tag">iOS</span>
+      <span class="phase-tag">Android</span>
+      <span class="phase-tag">AI</span>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-chip">Product 4</span>
+      <div class="card-title">Traveler / Guide / Agent App</div>
+      <p class="card-body">Flutter cross-platform app with GPS tracking, geofence check-in, push notifications, multi-language (EN/ES/IT), in-app bookings, and offline support.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Product 5</span>
+      <div class="card-title">AI Intelligence Layer</div>
+      <p class="card-body">Dynamic yield pricing, RAG pocket guide, auto-marketing content generation, upgrade chatbot, and influencer recruitment automation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE DIAGRAM -->
+<section id="architecture">
+  <h2><span class="h2-num">02</span> System Layer Architecture</h2>
+
+  <div class="diagram">
+    <div class="diagram-head">
+      <div class="diagram-dot"></div>
+      <span class="diagram-title">ARCH-LAYER-VIEW — SV.01</span>
+    </div>
+    <div class="diagram-body">
+      <svg class="arch-svg" width="100%" viewBox="0 0 800 580" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0 1.5 L8 5 L0 8.5 Z" fill="#d9d9d7"/>
+          </marker>
+        </defs>
+
+        <!-- CLIENT LAYER -->
+        <text x="12" y="22" font-size="9" fill="#8a8a86" font-family="DM Mono,monospace" letter-spacing="0.12em" text-transform="uppercase">CLIENT LAYER</text>
+        <rect x="12" y="30" width="120" height="44" rx="6" fill="#f9f9f8" stroke="#ebebea" stroke-width="1"/>
+        <text x="72" y="51" text-anchor="middle" font-size="11" font-weight="500" fill="#111110">Web SaaS</text>
+        <text x="72" y="65" text-anchor="middle" font-size="9" fill="#8a8a86">React / Next.js</text>
+
+        <rect x="145" y="30" width="120" height="44" rx="6" fill="#f9f9f8" stroke="#ebebea" stroke-width="1"/>
+        <text x="205" y="51" text-anchor="middle" font-size="11" font-weight="500" fill="#111110">Mobile App</text>
+        <text x="205" y="65" text-anchor="middle" font-size="9" fill="#8a8a86">Flutter (iOS/Android)</text>
+
+        <rect x="278" y="30" width="120" height="44" rx="6" fill="#f9f9f8" stroke="#ebebea" stroke-width="1"/>
+        <text x="338" y="51" text-anchor="middle" font-size="11" font-weight="500" fill="#111110">Corp Website</text>
+        <text x="338" y="65" text-anchor="middle" font-size="9" fill="#8a8a86">Next.js + Stripe</text>
+
+        <rect x="411" y="30" width="120" height="44" rx="6" fill="#f9f9f8" stroke="#ebebea" stroke-width="1"/>
+        <text x="471" y="51" text-anchor="middle" font-size="11" font-weight="500" fill="#111110">OTA Partners</text>
+        <text x="471" y="65" text-anchor="middle" font-size="9" fill="#8a8a86">API / iCal / XML</text>
+
+        <!-- down arrows -->
+        <line x1="400" y1="74" x2="400" y2="104" stroke="#d9d9d7" marker-end="url(#arr)"/>
+
+        <!-- EDGE LAYER -->
+        <rect x="12" y="110" width="768" height="44" rx="6" fill="#111110" stroke="none"/>
+        <text x="396" y="130" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.35)" font-family="DM Mono,monospace" letter-spacing="0.1em">EDGE LAYER</text>
+        <text x="396" y="145" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.55)">Cloud Armor WAF · Global HTTPS LB · Cloud CDN · API Gateway</text>
+        <line x1="400" y1="154" x2="400" y2="178" stroke="#d9d9d7" marker-end="url(#arr)"/>
+
+        <!-- BFF LAYER -->
+        <rect x="12" y="184" width="768" height="44" rx="6" fill="#f5f4f2" stroke="#ebebea" stroke-width="1"/>
+        <text x="396" y="204" text-anchor="middle" font-size="9" fill="#3a3a37" font-family="DM Mono,monospace" letter-spacing="0.08em">INGRESS / BFF LAYER</text>
+        <text x="396" y="218" text-anchor="middle" font-size="9" fill="#8a8a86">Kong API Gateway · JWT Auth · Rate Limiting · Tenant Routing · White-label Resolver</text>
+        <line x1="400" y1="228" x2="400" y2="252" stroke="#d9d9d7" marker-end="url(#arr)"/>
+
+        <!-- MICROSERVICES -->
+        <text x="12" y="268" font-size="9" fill="#8a8a86" font-family="DM Mono,monospace" letter-spacing="0.1em">MICROSERVICES — GKE AUTOPILOT</text>
+
+        <!-- Row 1 -->
+        <rect x="12" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="60" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Booking</text>
+        <text x="60" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">Availability</text>
+
+        <rect x="118" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="166" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Identity</text>
+        <text x="166" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">RBAC · Tenants</text>
+
+        <rect x="224" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="272" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Financial</text>
+        <text x="272" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">Ledger · FX</text>
+
+        <rect x="330" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="378" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Channel</text>
+        <text x="378" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">OTA · iCal · XML</text>
+
+        <rect x="436" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="484" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Geo / GPS</text>
+        <text x="484" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">Geofence · Check-in</text>
+
+        <rect x="542" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="590" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Marketplace</text>
+        <text x="590" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">B2B · OCR · Wallet</text>
+
+        <rect x="648" y="278" width="96" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="696" y="300" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Notify</text>
+        <text x="696" y="314" text-anchor="middle" font-size="8" fill="#8a8a86">WA · Push · SEO</text>
+
+        <!-- Row 2 NEW services -->
+        <rect x="12" y="338" width="96" height="50" rx="5" fill="white" stroke="#e9d5ff"/>
+        <text x="60" y="357" text-anchor="middle" font-size="8" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="60" y="370" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Affiliate</text>
+        <text x="60" y="383" text-anchor="middle" font-size="8" fill="#8a8a86">ID · QR · Links</text>
+
+        <rect x="118" y="338" width="96" height="50" rx="5" fill="white" stroke="#e9d5ff"/>
+        <text x="166" y="357" text-anchor="middle" font-size="8" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="166" y="370" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Chat</text>
+        <text x="166" y="383" text-anchor="middle" font-size="8" fill="#8a8a86">DLP · Screenshot</text>
+
+        <rect x="224" y="338" width="96" height="50" rx="5" fill="white" stroke="#e9d5ff"/>
+        <text x="272" y="357" text-anchor="middle" font-size="8" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="272" y="370" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">White Label</text>
+        <text x="272" y="383" text-anchor="middle" font-size="8" fill="#8a8a86">Logo · Colors</text>
+
+        <rect x="330" y="338" width="96" height="50" rx="5" fill="white" stroke="#e9d5ff"/>
+        <text x="378" y="357" text-anchor="middle" font-size="8" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="378" y="370" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Marketing AI</text>
+        <text x="378" y="383" text-anchor="middle" font-size="8" fill="#8a8a86">Reels · Email</text>
+
+        <rect x="436" y="338" width="96" height="50" rx="5" fill="white" stroke="#e9d5ff"/>
+        <text x="484" y="357" text-anchor="middle" font-size="8" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="484" y="370" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Bot Builder</text>
+        <text x="484" y="383" text-anchor="middle" font-size="8" fill="#8a8a86">No-Code Flows</text>
+
+        <!-- Event Bus -->
+        <line x1="400" y1="388" x2="400" y2="412" stroke="#d9d9d7" marker-end="url(#arr)"/>
+        <rect x="12" y="418" width="768" height="36" rx="6" fill="#f9f9f8" stroke="#ebebea"/>
+        <text x="396" y="432" text-anchor="middle" font-size="8" fill="#3a3a37" font-family="DM Mono,monospace" letter-spacing="0.08em">EVENT BUS — Google Cloud Pub/Sub</text>
+        <text x="396" y="446" text-anchor="middle" font-size="8" fill="#8a8a86">booking.confirmed · payment.settled · gps.update · checkin.auto · affiliate.sale</text>
+        <line x1="400" y1="454" x2="400" y2="474" stroke="#d9d9d7" marker-end="url(#arr)"/>
+
+        <!-- Data / AI Layer -->
+        <rect x="12" y="480" width="240" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="132" y="502" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">AI / Vertex AI</text>
+        <text x="132" y="516" text-anchor="middle" font-size="8" fill="#8a8a86">Pricing · RAG · Reels · Upgrade Bot</text>
+
+        <rect x="264" y="480" width="240" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="384" y="502" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Analytics Warehouse</text>
+        <text x="384" y="516" text-anchor="middle" font-size="8" fill="#8a8a86">BigQuery · Dataflow · Looker</text>
+
+        <rect x="516" y="480" width="264" height="50" rx="5" fill="white" stroke="#ebebea"/>
+        <text x="648" y="502" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">Primary Stores</text>
+        <text x="648" y="516" text-anchor="middle" font-size="8" fill="#8a8a86">Cloud SQL · Firestore · Redis</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- REQUEST FLOW -->
+<section id="request-flow">
+  <h2><span class="h2-num">03</span> Request Flow Architecture</h2>
+  <p>Every request is enforced at the edge and gateway. Side-effects (financial, notifications, AI chatbot trigger) are deferred to async workers via the event bus to maintain low latency for the traveler.</p>
+
+  <div class="diagram">
+    <div class="diagram-head">
+      <div class="diagram-dot"></div>
+      <span class="diagram-title">BOOKING-FLOW — SV.02</span>
+    </div>
+    <div class="diagram-body">
+      <svg width="100%" viewBox="0 0 780 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0 1.5 L8 5 L0 8.5 Z" fill="#b8b8b5"/>
+          </marker>
+        </defs>
+
+        <!-- Main flow steps -->
+        <g transform="translate(10, 30)">
+          <rect width="110" height="48" rx="5" fill="white" stroke="#ebebea"/>
+          <text x="55" y="21" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">1. Mobile App</text>
+          <text x="55" y="36" text-anchor="middle" font-size="8" fill="#8a8a86" font-family="DM Mono,monospace">POST /v1/bookings</text>
+
+          <path d="M110 24 L140 24" stroke="#d9d9d7" marker-end="url(#arr2)"/>
+
+          <rect x="140" width="110" height="48" rx="5" fill="white" stroke="#ebebea"/>
+          <text x="195" y="21" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">2. Cloud Armor</text>
+          <text x="195" y="36" text-anchor="middle" font-size="8" fill="#8a8a86">WAF / DDoS</text>
+
+          <path d="M250 24 L280 24" stroke="#d9d9d7" marker-end="url(#arr2)"/>
+
+          <rect x="280" width="110" height="48" rx="5" fill="white" stroke="#ebebea"/>
+          <text x="335" y="21" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">3. Global LB</text>
+          <text x="335" y="36" text-anchor="middle" font-size="8" fill="#8a8a86">TLS Termination</text>
+
+          <path d="M390 24 L420 24" stroke="#d9d9d7" marker-end="url(#arr2)"/>
+
+          <rect x="420" width="110" height="48" rx="5" fill="white" stroke="#ebebea"/>
+          <text x="475" y="21" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">4. Kong Gateway</text>
+          <text x="475" y="36" text-anchor="middle" font-size="8" fill="#8a8a86">JWT / RBAC / Tenant</text>
+
+          <path d="M530 24 L560 24" stroke="#d9d9d7" marker-end="url(#arr2)"/>
+
+          <rect x="560" width="120" height="48" rx="5" fill="#111110" stroke="none"/>
+          <text x="620" y="21" text-anchor="middle" font-size="10" font-weight="500" fill="white">5. Booking Svc</text>
+          <text x="620" y="36" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)">Inventory Lock · Redis</text>
+
+          <!-- Down to payment -->
+          <path d="M680 48 L680 100" stroke="#d9d9d7" marker-end="url(#arr2)"/>
+
+          <rect x="610" y="100" width="130" height="48" rx="5" fill="white" stroke="#ebebea"/>
+          <text x="675" y="121" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">6. Payment Svc</text>
+          <text x="675" y="136" text-anchor="middle" font-size="8" fill="#8a8a86">Stripe / SumUp</text>
+
+          <path d="M675 148 L675 200" stroke="#d9d9d7" marker-end="url(#arr2)"/>
+
+          <!-- Event published -->
+          <rect x="380" y="200" width="310" height="38" rx="5" fill="#f5f4f2" stroke="#ebebea"/>
+          <text x="535" y="214" text-anchor="middle" font-size="8" fill="#3a3a37" font-family="DM Mono,monospace" letter-spacing="0.06em">EVENT: booking.confirmed</text>
+          <text x="535" y="228" text-anchor="middle" font-size="8" fill="#8a8a86">Pub/Sub broadcast</text>
+        </g>
+
+        <!-- Async consumers -->
+        <text x="10" y="278" font-size="9" fill="#8a8a86" font-family="DM Mono,monospace" letter-spacing="0.1em">ASYNC CONSUMERS</text>
+        <rect x="10" y="288" width="90" height="36" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="55" y="311" text-anchor="middle" font-size="9" fill="#5c5c58">Financial Ledger</text>
+        <rect x="110" y="288" width="90" height="36" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="155" y="311" text-anchor="middle" font-size="9" fill="#5c5c58">Notify / WA</text>
+        <rect x="210" y="288" width="90" height="36" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="255" y="311" text-anchor="middle" font-size="9" fill="#5c5c58">OTA Sync</text>
+        <rect x="310" y="288" width="90" height="36" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="355" y="311" text-anchor="middle" font-size="9" fill="#5c5c58">Analytics</text>
+        <rect x="410" y="288" width="90" height="36" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="455" y="311" text-anchor="middle" font-size="9" fill="#5c5c58">Upgrade Bot</text>
+        <rect x="510" y="288" width="90" height="36" rx="4" fill="white" stroke="#e9d5ff"/>
+        <text x="555" y="302" text-anchor="middle" font-size="7" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="555" y="315" text-anchor="middle" font-size="9" fill="#5c5c58">Affiliate Credit</text>
+        <rect x="610" y="288" width="90" height="36" rx="4" fill="white" stroke="#e9d5ff"/>
+        <text x="655" y="302" text-anchor="middle" font-size="7" fill="#6b21a8" font-family="DM Mono,monospace">NEW</text>
+        <text x="655" y="315" text-anchor="middle" font-size="9" fill="#5c5c58">SEO Sync</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- MICROSERVICES -->
+<section id="microservices">
+  <h2><span class="h2-num">04</span> Microservices Design</h2>
+
+  <div class="code-block">
+<span class="c"># Namespace Topology — GKE Autopilot</span>
+<span class="k">namespaces:</span>
+  <span class="v">identity-core</span>:      <span class="c"># Auth, RBAC, Tenant Mgmt, White Label Config</span>
+  <span class="v">booking-engine</span>:     <span class="c"># Reservations, Inventory, Availability, Redis Lock</span>
+  <span class="v">financial-hub</span>:      <span class="c"># Ledger, Payouts, Commissions, FX (CZK/EUR)</span>
+  <span class="v">channel-manager</span>:    <span class="c"># OTA API, iCal/XML Sync, Freetour Adapter</span>
+  <span class="v">geo-gps</span>:            <span class="c"># Live Stream, Geofence, Auto Check-in Trigger</span>
+  <span class="v">marketplace</span>:        <span class="c"># B2B Portal, OCR, Wallet Split, Influencer API</span>
+  <span class="v">affiliate</span>:          <span class="c"># Unique IDs, QR Generation, Commission Tracking</span>
+  <span class="v">chat-dlp</span>:           <span class="c"># In-App Chat, Screenshot DLP, Human-handoff</span>
+  <span class="v">marketing-ai</span>:       <span class="c"># Email, Reels Generation, Social Assets, Review Push</span>
+  <span class="v">bot-builder</span>:        <span class="c"># No-Code Flow Editor, WA API, Template Engine</span>
+  <span class="v">intelligence</span>:       <span class="c"># Vertex AI Models, Analytics Sink, Upgrade Chatbot</span>
+  <span class="v">system-infra</span>:       <span class="c"># Ingress, Monitoring, Certs, CMEK Rotation</span>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section id="roles">
+  <h2><span class="h2-num">05</span> Roles & Hierarchy</h2>
+  <p>Dynamic role system with 8 user types, each with scoped access, affiliate IDs, and automated QR codes.</p>
+
+  <div class="role-grid">
+    <div class="role-pill"><span class="role-pill-icon">👑</span><span class="role-pill-title">Admin</span><span class="role-pill-sub">SaaS Owner</span></div>
+    <div class="role-pill"><span class="role-pill-icon">🏢</span><span class="role-pill-title">Agency</span><span class="role-pill-sub">Tenant Owner</span></div>
+    <div class="role-pill"><span class="role-pill-icon">🗂️</span><span class="role-pill-title">Manager</span><span class="role-pill-sub">Daily Ops</span></div>
+    <div class="role-pill"><span class="role-pill-icon">📱</span><span class="role-pill-title">Agent</span><span class="role-pill-sub">Direct / Referral</span></div>
+    <div class="role-pill"><span class="role-pill-icon">🧭</span><span class="role-pill-title">Guide</span><span class="role-pill-sub">Field Operations</span></div>
+    <div class="role-pill"><span class="role-pill-icon">🤝</span><span class="role-pill-title">Partner</span><span class="role-pill-sub">Restaurant / Hotel</span></div>
+    <div class="role-pill"><span class="role-pill-icon">🌍</span><span class="role-pill-title">Traveler</span><span class="role-pill-sub">End Consumer</span></div>
+    <div class="role-pill"><span class="role-pill-icon">📡</span><span class="role-pill-title">OTA</span><span class="role-pill-sub">Marketing Platform</span></div>
+  </div>
+
+  <div class="table-wrap" style="margin-top:20px;">
+    <table>
+      <thead><tr><th>Role</th><th>Key Permissions</th><th>Affiliate ID</th><th>QR Code</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Admin</strong></td><td>Global metrics, DB mgmt, subscription control, all tenants</td><td>✓</td><td>✓</td></tr>
+        <tr><td><strong>Agency</strong></td><td>Own environment, booking calendar, financial ledger, guide settlements</td><td>✓</td><td>✓</td></tr>
+        <tr><td><strong>Manager</strong></td><td>Check-in, direct/cross-selling, customer service</td><td>✓</td><td>✓</td></tr>
+        <tr><td><strong>Agent</strong></td><td>Sell full network inventory, referral links, live commission dashboard</td><td>✓</td><td>✓</td></tr>
+        <tr><td><strong>Guide</strong></td><td>Traveler lists, manual check-in, GPS broadcast, earnings balance</td><td>✓</td><td>✓</td></tr>
+        <tr><td><strong>Partner</strong></td><td>Manage offers, authorize cross-sell, validate receipts via OCR</td><td>✓</td><td>✓</td></tr>
+        <tr><td><strong>Traveler</strong></td><td>Book tours, track guide on map, receive reminders, upload receipts</td><td>—</td><td>—</td></tr>
+        <tr><td><strong>OTA</strong></td><td>Read-only inventory feed; availability sync only</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- GCP -->
+<section id="gcp">
+  <h2><span class="h2-num">06</span> Google Cloud Services</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>GCP Service</th><th>Architectural Role</th><th>Scaling & Reliability</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GKE Autopilot</strong></td><td>Managed compute for microservices, Kong, workers</td><td>HPA/VPA autoscaling; Multi-zone redundancy</td></tr>
+        <tr><td><strong>Cloud SQL (PostgreSQL 15)</strong></td><td>Per-tenant ACID persistence for financial and booking data</td><td>High Availability with automatic failover</td></tr>
+        <tr><td><strong>Cloud Firestore</strong></td><td>Real-time GPS, chat messages, availability state</td><td>NoSQL serverless; multi-region replication</td></tr>
+        <tr><td><strong>Cloud Pub/Sub</strong></td><td>Event coordination spine across all services</td><td>At-least-once delivery; replayable</td></tr>
+        <tr><td><strong>Vertex AI</strong></td><td>Dynamic pricing, RAG pocket guide, upgrade chatbot</td><td>Online prediction endpoints; batch retraining</td></tr>
+        <tr><td><strong>BigQuery</strong></td><td>Enterprise analytics, commission reports, BI</td><td>Columnar storage; materialized views</td></tr>
+        <tr><td><strong>Cloud Vision API</strong></td><td>OCR receipt extraction for B2B marketplace fraud prevention</td><td>Serverless; per-call billing</td></tr>
+        <tr><td><strong>Memorystore (Redis 7)</strong></td><td>Booking inventory lock, session cache, rate limiting</td><td>HA cluster; sub-millisecond reads</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- KUBERNETES -->
+<section id="kubernetes">
+  <h2><span class="h2-num">07</span> Kubernetes / GKE Design</h2>
+  <div class="callout callout-info">
+    <div class="callout-title">Topology Strategy</div>
+    <p>The cluster is partitioned into functional namespaces with strict Istio network policies to prevent lateral movement between tenants and services.</p>
+  </div>
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="card">
+      <div class="card-title">HPA + KEDA Scaling</div>
+      <p class="card-body">Pods scale on CPU/RAM via HPA. Async workers scale on Pub/Sub queue depth via KEDA for rapid burst handling during cruise ship arrivals.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Istio Service Mesh</div>
+      <p class="card-body">Enforces mTLS between all services. Provides circuit breaking, L7 traffic management, and distributed tracing via OpenTelemetry.</p>
+    </div>
+  </div>
+</section>
+
+<!-- NETWORKING -->
+<section id="networking">
+  <h2><span class="h2-num">08</span> VPC Networking Architecture</h2>
+  <p>A private-first VPC topology ensures no microservice or database is exposed to the public internet. Ingress is strictly mediated by the Global Load Balancer and Kong.</p>
+
+  <div class="diagram">
+    <div class="diagram-head">
+      <div class="diagram-dot"></div>
+      <span class="diagram-title">VPC-TOPOLOGY — SV.03</span>
+    </div>
+    <div class="diagram-body">
+      <svg width="100%" viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0 1.5 L8 5 L0 8.5 Z" fill="#b8b8b5"/>
+          </marker>
+        </defs>
+
+        <rect x="10" y="20" width="90" height="40" rx="4" fill="#f5f4f2" stroke="#ebebea"/>
+        <text x="55" y="42" text-anchor="middle" font-size="10" font-weight="500" fill="#111110">INTERNET</text>
+        <line x1="100" y1="40" x2="136" y2="40" stroke="#d9d9d7" marker-end="url(#arr3)"/>
+
+        <rect x="136" y="10" width="150" height="60" rx="5" fill="none" stroke="#c2410c" stroke-dasharray="4 2"/>
+        <text x="211" y="30" text-anchor="middle" font-size="8" fill="#c2410c" font-family="DM Mono,monospace" letter-spacing="0.1em">EDGE ZONE</text>
+        <text x="211" y="45" text-anchor="middle" font-size="8" fill="#8a8a86">Cloud Armor WAF</text>
+        <text x="211" y="57" text-anchor="middle" font-size="8" fill="#8a8a86">Global HTTPS LB</text>
+        <line x1="286" y1="40" x2="322" y2="40" stroke="#d9d9d7" marker-end="url(#arr3)"/>
+
+        <!-- VPC container -->
+        <rect x="322" y="5" width="430" height="305" rx="6" fill="#f9f9f8" stroke="#ebebea" stroke-width="1"/>
+        <text x="537" y="24" text-anchor="middle" font-size="8" fill="#3a3a37" font-family="DM Mono,monospace" letter-spacing="0.08em">PRIVATE VPC — 10.0.0.0/16</text>
+
+        <rect x="340" y="34" width="180" height="58" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="430" y="55" text-anchor="middle" font-size="9" font-weight="500" fill="#111110">Public Subnet 10.0.1.0/24</text>
+        <text x="430" y="70" text-anchor="middle" font-size="8" fill="#8a8a86">Kong Ingress · Cloud NAT</text>
+
+        <rect x="340" y="106" width="180" height="68" rx="4" fill="white" stroke="#111110" stroke-width="1.5"/>
+        <text x="430" y="127" text-anchor="middle" font-size="9" font-weight="500" fill="#111110">GKE Subnet 10.0.2.0/23</text>
+        <text x="430" y="143" text-anchor="middle" font-size="8" fill="#8a8a86">Private Microservice Pods</text>
+        <text x="430" y="157" text-anchor="middle" font-size="8" fill="#8a8a86">Workload Identity · Istio mTLS</text>
+
+        <rect x="340" y="188" width="180" height="68" rx="4" fill="white" stroke="#ebebea"/>
+        <text x="430" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#111110">Data Subnet 10.0.3.0/24</text>
+        <text x="430" y="225" text-anchor="middle" font-size="8" fill="#8a8a86">Cloud SQL · Redis · Firestore</text>
+        <text x="430" y="239" text-anchor="middle" font-size="8" fill="#8a8a86">Private Service Connect</text>
+
+        <rect x="540" y="34" width="190" height="222" rx="4" fill="none" stroke="#d97706" stroke-dasharray="3 2"/>
+        <text x="635" y="56" text-anchor="middle" font-size="8" fill="#d97706" font-family="DM Mono,monospace" letter-spacing="0.08em">AI / ANALYTICS</text>
+        <text x="635" y="78" text-anchor="middle" font-size="8" fill="#8a8a86">Vertex AI Endpoints</text>
+        <text x="635" y="96" text-anchor="middle" font-size="8" fill="#8a8a86">BigQuery Private Access</text>
+        <text x="635" y="114" text-anchor="middle" font-size="8" fill="#8a8a86">GPU Node Pools</text>
+        <text x="635" y="132" text-anchor="middle" font-size="8" fill="#8a8a86">Cloud Vision OCR</text>
+        <text x="635" y="150" text-anchor="middle" font-size="8" fill="#6b21a8">Influencer API (Modash)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- DATABASE -->
+<section id="database">
+  <h2><span class="h2-num">09</span> Database Architecture & Topology</h2>
+  <p>Multi-database strategy to balance ACID guarantees for financial data with sub-millisecond real-time updates for GPS, chat, and availability.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <span class="card-chip">Relational / ACID</span>
+      <div class="card-title">Cloud SQL (PostgreSQL 15)</div>
+      <p class="card-body">Primary store for booking and financial ledgers. Per-tenant physical instance isolation. Supports multi-currency settlement (CZK, EUR).</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Real-time / Sync</span>
+      <div class="card-title">Cloud Firestore</div>
+      <p class="card-body">High-frequency updates for GPS streams, in-app chat, and traveler-facing booking status. Multi-device sync out of the box.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Distributed Cache</span>
+      <div class="card-title">Memorystore (Redis 7)</div>
+      <p class="card-body">Distributed SETNX locking during booking to prevent over-capacity. Session caching and rate-limiting buckets for rapid API response.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-ok" style="margin-top:16px;">
+    <div class="callout-title">Tenant Isolation Strategy</div>
+    <p>Agency onboarding triggers an automated Cloud Function provisioning a dedicated Cloud SQL instance — zero cross-tenant data leak risk. Simplifies GDPR compliance per jurisdiction.</p>
+  </div>
+</section>
+
+<!-- DATA PIPELINES -->
+<section id="data-pipeline">
+  <h2><span class="h2-num">10</span> Event-Driven Data Pipelines</h2>
+  <p>Continuous Change Data Capture (CDC) via Debezium keeps the analytics warehouse within 60 seconds of production state without impacting transactional performance.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pipeline</th><th>Trigger</th><th>Tech Stack</th><th>Target Latency</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Booking Stream</strong></td><td>On Confirmation</td><td>Pub/Sub → Dataflow</td><td>&lt; 5 seconds</td></tr>
+        <tr><td><strong>Financial Reconciliation</strong></td><td>Daily 02:00 UTC</td><td>Cloud Composer (Airflow)</td><td>24 hours</td></tr>
+        <tr><td><strong>GPS Telemetry</strong></td><td>Every 5 seconds</td><td>Go Streamer → Firestore</td><td>&lt; 1 second</td></tr>
+        <tr><td><strong>Geofence Check-in</strong></td><td>Proximity &lt; 50m</td><td>Geo Service → Pub/Sub Event</td><td>&lt; 2 seconds</td></tr>
+        <tr><td><strong>OCR Receipt Validation</strong></td><td>Photo upload</td><td>Cloud Vision → Geo validate</td><td>&lt; 10 seconds</td></tr>
+        <tr><td><strong>Affiliate Credit</strong></td><td>booking.confirmed</td><td>Affiliate Service consumer</td><td>&lt; 5 seconds</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- FINANCIAL CORE -->
+<section id="financial">
+  <h2><span class="h2-num">11</span> Financial Core</h2>
+  <p>The financial engine is a re-engineering of the existing UWT backend — proven workflow, modernised stack. Supports multi-currency (CZK, EUR) and automated settlement.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-chip">Income Sources</span>
+      <div class="card-title">Revenue Streams</div>
+      <p class="card-body">Offline sales (manual), online sales (own website), OTA / external web sales, Pay-in from guides, partner sales, and agent sales via affiliate links.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Expense Types</span>
+      <div class="card-title">Outflow Tracking</div>
+      <p class="card-body">Manual expenses, manager payments, guide payments, partner payouts, agent payouts, and automated Stripe/SumUp fee reconciliation.</p>
+    </div>
+  </div>
+
+  <h3>Wallet Split Logic</h3>
+  <div class="code-block">
+<span class="c"># Automated split on B2B partner transaction confirmation</span>
+<span class="k">split_logic:</span>
+  <span class="v">traveler_cashback</span>:  <span class="s">"5%"</span>
+  <span class="v">guide_commission</span>:   <span class="s">"2.5%"</span>
+  <span class="v">agency_commission</span>:  <span class="s">"2.5%"</span>
+  <span class="v">currencies</span>:         <span class="s">["EUR", "CZK"]</span>
+  <span class="v">settlement</span>:         <span class="s">"automated"</span>  <span class="c"># via Stripe Connect</span>
+  </div>
+</section>
+
+<!-- CHANNEL MANAGER -->
+<section id="channel-manager">
+  <h2><span class="h2-num">12</span> Channel Manager</h2>
+  <p>Bidirectional synchronisation with OTA platforms and calendar-based tools, ensuring inventory never goes out of sync.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <span class="card-chip">OTA API</span>
+      <div class="card-title">Civitatis / GetYourGuide / Viator</div>
+      <p class="card-body">Real-time availability push and pull via REST API integration. Booking confirmations trigger immediate inventory lock across all channels.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Calendar Sync</span>
+      <div class="card-title">iCal / XML — Freetour.com</div>
+      <p class="card-body">iCal and XML feed adapters for free-tour platforms. Cron-based pull every 15 minutes with conflict resolution via Redis lock.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Review Integration</span>
+      <div class="card-title">TripAdvisor / Google Business</div>
+      <p class="card-body">Post-tour event triggers automated review request via WhatsApp Business API and email. TripAdvisor and Google reviews fetched and displayed in agency dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CROSS-SELLING -->
+<section id="cross-selling">
+  <h2><span class="h2-num">13</span> Cross-Selling & Partner Network</h2>
+  <p>"We will create a shielded market where agencies do not compete; they empower each other. The network feeds itself."</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-chip">Affiliation Panel</span>
+      <div class="card-title">Partner Authorization</div>
+      <p class="card-body">Each agency controls which of their tours can be sold by other network partners. Variable commission percentages or fixed amounts per sale.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Redirect Logic</span>
+      <div class="card-title">Network Routing</div>
+      <p class="card-body">When a traveler completes a tour in Prague, the AI Upgrade Chatbot automatically suggests a partner agency in Budapest with one-tap booking.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-info" style="margin-top:16px;">
+    <div class="callout-title">Inter-Partner Settlement</div>
+    <p>Cross-sell revenue is tracked in real-time per agency. Monthly automated settlement via Stripe Connect with transparent ledger entries visible to both agencies.</p>
+  </div>
+</section>
+
+<!-- AFFILIATE & QR — NEW -->
+<section id="affiliate">
+  <h2><span class="h2-num">14</span> Affiliate Ecosystem & QR System <span style="font-size:0.72rem;background:var(--new-bg);color:var(--new);border:1px solid var(--new-border);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-weight:500;margin-left:8px;vertical-align:middle;">NEW</span></h2>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Unique Affiliate ID</div>
+      <p class="card-body">Every user (admin, agency, manager, agent, guide, partner) receives a system-generated, globally unique Affiliate ID on account creation.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Customizable QR Code</div>
+      <p class="card-body">Auto-generated QR code linked to the Affiliate ID. Downloadable in SVG/PNG. Embeds UTM parameters for revenue attribution.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Live Commission Dashboard</div>
+      <p class="card-body">Agents see real-time balance of sales and commissions from across the entire network inventory, updated on booking.confirmed events.</p>
+    </div>
+  </div>
+</section>
+
+<!-- B2B MARKETPLACE — EXPANDED -->
+<section id="b2b">
+  <h2><span class="h2-num">15</span> B2B Marketplace <span style="font-size:0.72rem;background:var(--new-bg);color:var(--new);border:1px solid var(--new-border);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-weight:500;margin-left:8px;vertical-align:middle;">Expanded</span></h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">2-Click Smart Contracts</div>
+      <p class="card-body">Partners (restaurants, shows, hotels) enter digital commission agreements in two clicks. No PDF, no manual terms — pre-built legal templates with variable rate fields.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">OCR + GPS Fraud Prevention</div>
+      <p class="card-body">Travelers upload receipt photos; Cloud Vision API extracts amount and merchant. GPS geofencing cross-validates the traveler was physically at the partner location at time of transaction.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Influencer Discovery</div>
+      <p class="card-body">Modash / RapidAPI integration searches and ranks influencers by niche, reach, and location. AI-generated personalised outreach DMs sent automatically on approval.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Wallet & Automated Settlement</div>
+      <p class="card-body">Split logic (5% traveler cashback / 2.5% guide / 2.5% agency) applied per transaction. Multi-currency support (CZK, EUR). Stripe Connect handles automated payouts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHITE LABEL — NEW -->
+<section id="whitelabel">
+  <h2><span class="h2-num">16</span> White Label / Brand Customization <span style="font-size:0.72rem;background:var(--new-bg);color:var(--new);border:1px solid var(--new-border);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-weight:500;margin-left:8px;vertical-align:middle;">NEW</span></h2>
+  <p>Each agency operates inside a fully branded environment. White labelling is resolved at the BFF layer before rendering, with zero cross-tenant visibility.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Custom Logo & Colours</div>
+      <p class="card-body">Agency uploads primary logo and brand palette. All traveler-facing UI, emails, WhatsApp templates, and QR codes render with the agency's branding.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Custom Domain Support</div>
+      <p class="card-body">Agency SaaS operates on a subdomain or custom domain. TLS cert auto-provisioned via Cert-Manager. White-label resolver at Kong layer.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Social Media Assets</div>
+      <p class="card-body">Pre-built white-label social post templates generated on demand with agency colours and logo. Manual or automated via Marketing AI module.</p>
+    </div>
+  </div>
+</section>
+
+<!-- IN-APP CHAT — NEW -->
+<section id="chat">
+  <h2><span class="h2-num">17</span> In-App Chat with Screenshot Protection <span style="font-size:0.72rem;background:var(--new-bg);color:var(--new);border:1px solid var(--new-border);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-weight:500;margin-left:8px;vertical-align:middle;">NEW</span></h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Internal Communication Channel</div>
+      <p class="card-body">Persistent chat between all role types within the tenant. Messages stored in Firestore for real-time sync. Supports text, tour links, and booking references.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Screenshot DLP</div>
+      <p class="card-body">Platform-level overlay prevents screenshots of sensitive conversations and financial data. On mobile, the Flutter app uses Android FLAG_SECURE / iOS UIScreen.capturedDidChangeNotification to block screen capture.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <div class="callout-title">WhatsApp Business API — Human Handoff</div>
+    <p>The FAQ chatbot handles common queries. When it cannot resolve, it initiates a Human-Handoff via the native WhatsApp Business API, routing the conversation to the agency's customer service agent with full context.</p>
+  </div>
+</section>
+
+<!-- AUTO-MARKETING — NEW -->
+<section id="marketing">
+  <h2><span class="h2-num">18</span> Auto-Marketing & AI Content <span style="font-size:0.72rem;background:var(--new-bg);color:var(--new);border:1px solid var(--new-border);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-weight:500;margin-left:8px;vertical-align:middle;">NEW</span></h2>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">AI Reels / Post Generation</div>
+      <p class="card-body">Tour photos are processed by a Vertex AI Vision pipeline that composes Reels-format short videos and static posts. Published to agency's social channels on approval.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Email Marketing</div>
+      <p class="card-body">Automated and manual email campaigns. Custom email signatures per agency. White-label templates with dynamic variables ({guide_name}, {tour_date}, {booking_ref}).</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">SEO Sync</div>
+      <p class="card-body">App bookings are registered as conversion events on the agency's Google Analytics / Search Console account, boosting organic ranking via verified user signals.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AI MODULES -->
+<section id="ai">
+  <h2><span class="h2-num">19</span> AI Modules — Vertex AI</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-chip">Revenue Optimization</span>
+      <div class="card-title">Dynamic Yield Management</div>
+      <p class="card-body">Custom ML model trained on historical bookings, cruise ship arrival schedules, and weather data. Suggests price adjustments in real-time per agency dashboard.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Generative UX</span>
+      <div class="card-title">RAG Pocket Guide</div>
+      <p class="card-body">Vertex AI + Matching Engine powers a post-tour multilingual chatbot. Answers traveler questions using the agency's private knowledge base. Keeps the customer inside the app.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Verification</span>
+      <div class="card-title">OCR Fraud Prevention</div>
+      <p class="card-body">Cloud Vision API extracts merchant data from uploaded receipts, validated against GPS geofence to confirm physical presence at the partner location.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Upgrade Chatbot</div>
+      <p class="card-body">Proactive post-tour upselling. After a tour completes, the chatbot suggests reviews, offers a discount for the next destination in the partner network, and auto-routes to the relevant agency.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MOBILE APP -->
+<section id="app">
+  <h2><span class="h2-num">20</span> Mobile App — Phase 2</h2>
+  <p>Flutter cross-platform app (iOS + Android) with a unified inventory, real-time GPS, and multi-language support (EN / ES / IT).</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <span class="card-chip">Traveler</span>
+      <div class="card-title">Explore & Book</div>
+      <p class="card-body">In-app tour discovery, unified inventory across the partner network, multi-destination booking, and one-tap check-in via GPS proximity.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Guide</span>
+      <div class="card-title">Field Operations</div>
+      <p class="card-body">Live GPS broadcast (active 15 min before tour), traveler list, manual check-in fallback, earnings balance, and automatic tour reminder 2 hours prior.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Agent</span>
+      <div class="card-title">Mobile Sales</div>
+      <p class="card-body">Sell full network inventory from mobile, share affiliate QR code, and view live commission balance updated on every confirmed booking event.</p>
+    </div>
+  </div>
+
+  <h3>GPS Auto Check-in Flow</h3>
+  <div class="callout callout-ok">
+    <div class="callout-title">Geofence-Triggered Check-in</div>
+    <p>When a traveler's device enters a 50m geofence around the tour meeting point (activated 15 min before tour start), a <code style="font-family:var(--font-mono);font-size:0.8em;background:var(--ok-border);padding:1px 4px;border-radius:2px;">checkin.auto</code> event is published. The Booking Service marks attendance and the Guide receives a silent notification. Manual override remains available.</p>
+  </div>
+</section>
+
+<!-- NO-CODE BUILDER — NEW -->
+<section id="chatbot-builder">
+  <h2><span class="h2-num">21</span> No-Code Chatbot Builder <span style="font-size:0.72rem;background:var(--new-bg);color:var(--new);border:1px solid var(--new-border);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-weight:500;margin-left:8px;vertical-align:middle;">NEW</span></h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Visual Flow Builder</div>
+      <p class="card-body">Drag-and-drop node editor for agencies to build custom WhatsApp and in-app chatbot flows without code. Supports conditional branches and language templates.</p>
+    </div>
+    <div class="card">
+      <div class="card-new-badge">New</div>
+      <div class="card-title">Dynamic Variables</div>
+      <p class="card-body">Template engine supports variables such as <code style="font-size:0.8em;font-family:var(--font-mono);">{pax_count}</code>, <code style="font-size:0.8em;font-family:var(--font-mono);">{time}</code>, <code style="font-size:0.8em;font-family:var(--font-mono);">{guide_name}</code>, and <code style="font-size:0.8em;font-family:var(--font-mono);">{booking_ref}</code> that resolve at runtime. Automated location sending on tour day.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="security">
+  <h2><span class="h2-num">22</span> Security Architecture</h2>
+  <div class="grid-3">
+    <div class="card">
+      <span class="card-chip">Network</span>
+      <div class="card-title">Zero Trust (mTLS)</div>
+      <p class="card-body">Istio ensures all service-to-service communication is encrypted and mutually authenticated. No cleartext inter-service traffic permitted.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Identity</span>
+      <div class="card-title">Workload Identity</div>
+      <p class="card-body">GKE pods assume GCP IAM roles without long-lived keys. Principle of least privilege enforced at namespace level.</p>
+    </div>
+    <div class="card">
+      <span class="card-chip">Data At Rest</span>
+      <div class="card-title">CMEK Encryption</div>
+      <p class="card-body">All persistence layers use Customer-Managed Encryption Keys via Cloud KMS with automatic 90-day rotation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- RESILIENCE -->
+<section id="resilience">
+  <h2><span class="h2-num">23</span> Resilience & Business Continuity</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>RTO</th><th>RPO</th><th>Strategy</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Core Services</strong></td><td>&lt; 5 min</td><td>N/A</td><td>Multi-zone GKE Autopilot with automatic pod rescheduling</td></tr>
+        <tr><td><strong>Cloud SQL</strong></td><td>&lt; 15 min</td><td>&lt; 1 min</td><td>HA Regional failover + Cross-region DR replica</td></tr>
+        <tr><td><strong>Static Assets</strong></td><td>Instant</td><td>Instant</td><td>Cloud CDN with global edge presence and multi-region bucket backup</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Istio manages service-to-service resilience. If the Payment Service or external OTA APIs degrade, circuit breakers open and requests are queued in Pub/Sub for automatic retry with exponential backoff.</p>
+</section>
+
+<!-- OBSERVABILITY -->
+<section id="observability">
+  <h2><span class="h2-num">24</span> Observability & Performance</h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Tracing (OpenTelemetry)</div>
+      <p class="card-body">End-to-end request tracing across all microservice boundaries. Identifies P95 latency bottlenecks in real-time via Cloud Trace.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Metrics (Prometheus + Grafana)</div>
+      <p class="card-body">Custom business dashboards — Bookings/min, OTA sync lag, active GPS streams, affiliate conversion rate, chatbot resolution rate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COST -->
+<section id="cost">
+  <h2><span class="h2-num">25</span> Cost Optimization Model</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>Optimization Lever</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Compute</strong></td><td>Spot instances for async workers, GKE right-sizing</td><td>−60% spend</td></tr>
+        <tr><td><strong>Storage</strong></td><td>Nearline/Coldline lifecycle policies for archived receipts</td><td>−30% spend</td></tr>
+        <tr><td><strong>Database</strong></td><td>Instance sharing for trial/small-agency tenants via schema isolation</td><td>−45% spend</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- REVIEW -->
+<section id="review">
+  <h2><span class="h2-num">26</span> Production Readiness Review</h2>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Critical Risk — Instance Overhead at Scale</div>
+    <p>1,000+ Cloud SQL instances introduces management toil. <strong>Mitigation:</strong> Implement a tier-based system where small agencies share instances via schema isolation. Tier-1 enterprise tenants maintain dedicated infrastructure.</p>
+  </div>
+
+  <div class="callout callout-ok" style="margin-top:14px;">
+    <div class="callout-title">v3.0 Certification</div>
+    <p>This architecture now fully reflects the project specification. All 13 previously missing components have been integrated. The system is structurally sound for a phased build: Phase 1 (SaaS + B2B) → Phase 2 (App + AI Layer).</p>
+  </div>
+
+  <p style="margin-top:32px; font-family:var(--font-mono); font-size:0.72rem; color:var(--gray-300);">
+    Blueprint v3.0 · Audit & Redesign · May 2026 · Target: CTO / Architecture Board
+  </p>
+</section>
+
+</main>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const s = document.documentElement.scrollTop;
+  const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  document.getElementById('prog').style.width = (s / h * 100) + '%';
+});
+
+// Scroll spy
+const secs = document.querySelectorAll('section[id]');
+const links = document.querySelectorAll('.sb-link[href^="#"]');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  secs.forEach(s => { if (pageYOffset >= s.offsetTop - 120) cur = s.id; });
+  links.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + cur);
+  });
+}, { passive: true });
+</script>
+
+</body>
+</html>
